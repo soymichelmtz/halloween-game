@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Halloween Candy Collector</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Halloween Candy Collector</h1>
+  <p id="instructions">Usa ← → o A/D para moverte. Recoge caramelos y evita fantasmas. Pulsa Espacio para iniciar/reiniciar.</p>
+  <canvas id="game" width="800" height="600" tabindex="0" aria-label="Área de juego"></canvas>
+
+  <!-- Touch controls: se mostrarán en pantallas táctiles -->
+  <div class="touch-controls" aria-hidden="false">
+    <button id="leftBtn" class="touch-btn" aria-label="mover izquierda">◀</button>
+    <button id="rightBtn" class="touch-btn" aria-label="mover derecha">▶</button>
+    <button id="startBtn" class="touch-btn start" aria-label="iniciar juego">Iniciar</button>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
