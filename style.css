@@ -36,6 +36,9 @@ canvas{max-width:900px;width:100%;height:auto;display:block}
 .modal h2{margin:0 0 10px 0;color:#ffb86b}
 .field{margin-bottom:12px}
 .row{display:flex;align-items:center;gap:8px}
+.row.modes{flex-wrap:wrap;gap:8px 10px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);padding:6px 10px;border-radius:999px;cursor:pointer}
+.chip input{accent-color:#ff6b6b}
 .field label{display:block;margin-bottom:6px;color:#cfcfcf}
 .value{min-width:36px;text-align:right;font-variant-numeric:tabular-nums}
 .unit{opacity:.8}

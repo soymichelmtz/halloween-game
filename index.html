@@ -29,6 +29,15 @@
     <div class="modal-content">
       <h2 id="settingsTitle">Ajustes</h2>
       <div class="field">
+        <label>Modo de juego</label>
+        <div class="row modes">
+          <label class="chip"><input type="radio" name="mode" id="modeEasy" value="facil"> Fácil</label>
+          <label class="chip"><input type="radio" name="mode" id="modeMedium" value="medio"> Medio</label>
+          <label class="chip"><input type="radio" name="mode" id="modeHard" value="dificil"> Difícil</label>
+          <label class="chip"><input type="radio" name="mode" id="modeCustom" value="custom"> Personalizado</label>
+        </div>
+      </div>
+      <div class="field">
         <label for="playerSpeed">Velocidad del jugador</label>
         <div class="row">
           <input type="range" id="playerSpeed" min="150" max="600" step="10" value="350" />

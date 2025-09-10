@@ -31,6 +31,12 @@ Atajos/Controles
 - Teclado: ← → o A/D para moverte; Espacio para iniciar/reiniciar.
 - Táctil (móvil): botones en pantalla para izquierda/derecha y botón Iniciar.
 
+Ajustes del juego
+- Botón ⚙️ abre el modal de Ajustes.
+- Modo de juego: Fácil / Medio / Difícil / Personalizado.
+	- Los modos predefinidos ajustan dificultad, velocidad del jugador y vidas iniciales automáticamente.
+	- En modo Personalizado puedes mover los sliders para velocidad y dificultad y se guardan en localStorage.
+
 Notas importantes
 - Audio: WebAudio suele requerir una interacción (tap/click) para activarse. Si no escuchas sonidos, haz clic o toca el canvas para habilitar audio.
 - Canvas es responsive: el tamaño se adapta al ancho del navegador manteniendo la jugabilidad.

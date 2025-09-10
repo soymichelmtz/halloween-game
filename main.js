@@ -7,13 +7,27 @@ let keys = {};
 let game = {running:false, score:0, lives:3, spawnTimer:0, speed:1, objects:[], paused:false};
 
 // Settings with persistence
-const DEFAULT_SETTINGS = { playerSpeed: 350, difficulty: 50 };
+const DEFAULT_SETTINGS = { playerSpeed: 350, difficulty: 50, mode: 'medio', lives: 3 };
 function loadSettings(){
   try{ const raw = localStorage.getItem('halloween_settings'); if(raw){ return {...DEFAULT_SETTINGS, ...JSON.parse(raw)} } }catch(e){}
   return {...DEFAULT_SETTINGS};
 }
 function saveSettings(s){ try{ localStorage.setItem('halloween_settings', JSON.stringify(s)) }catch(e){} }
 let settings = loadSettings();
+function applyModePreset(mode){
+  // Define presets
+  const presets = {
+    'facil':   { difficulty: 25, playerSpeed: 320, lives: 5 },
+    'medio':   { difficulty: 50, playerSpeed: 350, lives: 3 },
+    'dificil': { difficulty: 80, playerSpeed: 380, lives: 2 },
+  };
+  const p = presets[mode];
+  if(!p) return;
+  settings.mode = mode;
+  settings.difficulty = p.difficulty;
+  settings.playerSpeed = p.playerSpeed;
+  settings.lives = p.lives;
+}
 
 // assets
 const assets = {};
@@ -175,7 +189,18 @@ window.addEventListener('keyup', (e)=>{ keys[e.key] = false });
 canvas.addEventListener('click', ()=> canvas.focus());
 canvas.addEventListener('touchstart',(e)=>{ e.preventDefault(); canvas.focus(); });
 
-function startGame(){ game.running=true; game.score=0; game.lives=3; game.objects=[]; game.spawnTimer=0.5; game.speed=1; last = performance.now(); requestAnimationFrame(loop); }
+function startGame(){
+  game.running=true;
+  game.score=0;
+  // use settings.lives (fallback 3)
+  game.lives = settings.lives ?? 3;
+  game.objects=[];
+  game.spawnTimer=0.5;
+  game.speed=1;
+  game.paused=false;
+  last = performance.now();
+  requestAnimationFrame(loop);
+}
 
 // start with canvas focus so keyboard works
 canvas.focus();
@@ -211,12 +236,22 @@ const diffVal = document.getElementById('difficultyVal');
 const saveBtn = document.getElementById('settingsSave');
 const cancelBtn = document.getElementById('settingsCancel');
 const resetBtn = document.getElementById('settingsReset');
+const modeEasy = document.getElementById('modeEasy');
+const modeMedium = document.getElementById('modeMedium');
+const modeHard = document.getElementById('modeHard');
+const modeCustom = document.getElementById('modeCustom');
 
 function openSettings(){
   speedInput.value = settings.playerSpeed;
   speedVal.textContent = settings.playerSpeed;
   diffInput.value = settings.difficulty;
   diffVal.textContent = settings.difficulty;
+  // set mode radios
+  const mode = settings.mode || 'medio';
+  modeEasy.checked = mode === 'facil';
+  modeMedium.checked = mode === 'medio';
+  modeHard.checked = mode === 'dificil';
+  modeCustom.checked = mode === 'custom';
   modal.classList.remove('hidden');
 }
 function closeSettings(){ modal.classList.add('hidden') }
@@ -231,10 +266,28 @@ saveBtn?.addEventListener('click', ()=>{
   settings = {
     playerSpeed: clamp(parseInt(speedInput.value||DEFAULT_SETTINGS.playerSpeed,10), 150, 600),
     difficulty: clamp(parseInt(diffInput.value||DEFAULT_SETTINGS.difficulty,10), 0, 100),
+    mode: (modeEasy.checked ? 'facil' : modeMedium.checked ? 'medio' : modeHard.checked ? 'dificil' : 'custom'),
+    lives: settings.lives ?? DEFAULT_SETTINGS.lives,
   };
+  // If not custom, apply the preset values (may override sliders)
+  if(settings.mode !== 'custom'){
+    applyModePreset(settings.mode);
+  }
   saveSettings(settings);
   closeSettings();
 });
+
+// When selecting preset radios, update sliders live (without saving yet)
+function updateSlidersForMode(mode){
+  if(mode==='custom') return;
+  applyModePreset(mode);
+  speedInput.value = settings.playerSpeed; speedVal.textContent = settings.playerSpeed;
+  diffInput.value = settings.difficulty; diffVal.textContent = settings.difficulty;
+}
+modeEasy?.addEventListener('change', ()=> updateSlidersForMode('facil'));
+modeMedium?.addEventListener('change', ()=> updateSlidersForMode('medio'));
+modeHard?.addEventListener('change', ()=> updateSlidersForMode('dificil'));
+modeCustom?.addEventListener('change', ()=> { /* keep current sliders */ settings.mode='custom'; });
 
 // Pause wiring
 const pauseBtn = document.getElementById('pauseBtn');
