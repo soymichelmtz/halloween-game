@@ -4,7 +4,7 @@ const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 
 let keys = {};
-let game = {running:false, score:0, lives:3, spawnTimer:0, speed:1, objects:[]};
+let game = {running:false, score:0, lives:3, spawnTimer:0, speed:1, objects:[], paused:false};
 
 // Settings with persistence
 const DEFAULT_SETTINGS = { playerSpeed: 350, difficulty: 50 };
@@ -113,7 +113,7 @@ let last = performance.now();
 function loop(now){
   const dt = Math.min(0.04,(now-last)/1000);
   last = now;
-  update(dt);
+  if(!game.paused) update(dt);
   draw();
   if(game.running) requestAnimationFrame(loop);
 }
@@ -148,6 +148,13 @@ function draw(){
   // UI
   ctx.fillStyle = '#fff'; ctx.font='20px Segoe UI'; ctx.fillText(`Puntaje: ${game.score}`, 12, 30);
   ctx.fillText(`Vidas: ${game.lives}`, 12, 58);
+
+  if(game.paused && game.running){
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(W/2-180,H/2-60,360,120);
+    ctx.fillStyle='#ffb86b'; ctx.font='28px Segoe UI'; ctx.textAlign='center'; ctx.fillText('Juego en Pausa', W/2, H/2-5);
+    ctx.fillStyle='#fff'; ctx.font='16px Segoe UI'; ctx.fillText('Pulsa P o el botón ⏸ para continuar', W/2, H/2+24);
+    ctx.textAlign='left';
+  }
 
   if(!game.running){
     ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(W/2-200,H/2-70,400,140);
@@ -228,3 +235,9 @@ saveBtn?.addEventListener('click', ()=>{
   saveSettings(settings);
   closeSettings();
 });
+
+// Pause wiring
+const pauseBtn = document.getElementById('pauseBtn');
+function togglePause(){ if(game.running){ game.paused = !game.paused; draw(); } }
+pauseBtn?.addEventListener('click', togglePause);
+window.addEventListener('keydown', (e)=>{ if(e.key === 'p' || e.key === 'P'){ e.preventDefault(); togglePause(); } });
