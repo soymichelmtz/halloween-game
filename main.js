@@ -6,6 +6,15 @@ const W = canvas.width, H = canvas.height;
 let keys = {};
 let game = {running:false, score:0, lives:3, spawnTimer:0, speed:1, objects:[]};
 
+// Settings with persistence
+const DEFAULT_SETTINGS = { playerSpeed: 350, difficulty: 50 };
+function loadSettings(){
+  try{ const raw = localStorage.getItem('halloween_settings'); if(raw){ return {...DEFAULT_SETTINGS, ...JSON.parse(raw)} } }catch(e){}
+  return {...DEFAULT_SETTINGS};
+}
+function saveSettings(s){ try{ localStorage.setItem('halloween_settings', JSON.stringify(s)) }catch(e){} }
+let settings = loadSettings();
+
 // assets
 const assets = {};
 let assetsToLoad = 3;
@@ -39,7 +48,7 @@ function playSfx(type){
 class Player{
   constructor(){ this.w=60; this.h=30; this.x=W/2-this.w/2; this.y=H-80; this.color='#8b5cf6' }
   update(dt){
-    const speed = 350;
+  const speed = settings.playerSpeed || 350;
     if(keys['ArrowLeft']||keys['a']||keys['touchLeft']) this.x -= speed*dt;
     if(keys['ArrowRight']||keys['d']||keys['touchRight']) this.x += speed*dt;
     this.x = Math.max(10, Math.min(W - this.w - 10, this.x));
@@ -76,7 +85,7 @@ class Candy{
 }
 
 class Ghost{
-  constructor(x){ this.x=x; this.y=-40; this.r=22; this.speed=80+Math.random()*60; this.phase=Math.random()*Math.PI*2 }
+  constructor(x){ this.x=x; this.y=-40; this.r=22; this.speed=ghostBaseSpeed()+Math.random()*60; this.phase=Math.random()*Math.PI*2 }
   update(dt){ this.y += this.speed*dt; this.x += Math.sin((performance.now()/500)+this.phase)*20*dt }
   draw(){
   if(assets.ghost){ ctx.drawImage(assets.ghost, this.x-this.r-6, this.y-this.r-6, this.r*2+12, this.r*2+12); return }
@@ -112,7 +121,7 @@ function loop(now){
 function update(dt){
   player.update(dt);
   game.spawnTimer -= dt;
-  if(game.spawnTimer <= 0){ spawn(); game.spawnTimer = 0.6 - Math.min(0.35, game.speed*0.02); }
+  if(game.spawnTimer <= 0){ spawn(); game.spawnTimer = spawnInterval(); }
   for(let i=game.objects.length-1;i>=0;i--){
     const obj = game.objects[i]; obj.update(dt);
     if(obj.y > H+50) { game.objects.splice(i,1); continue }
@@ -168,3 +177,54 @@ draw();
 
 // expose for debug in console
 window._game = game; window._player = player;
+
+// Difficulty helpers
+function spawnInterval(){
+  // Difficulty 0..100 -> interval from easy (0.8s) to hard (0.25s)
+  const d = clamp((settings.difficulty ?? 50), 0, 100);
+  const base = 0.8 - (d/100)*(0.8-0.25);
+  // Include a small ramp with game.speed but keep within [0.18..1.2]
+  const adjusted = base - Math.min(0.25, game.speed*0.02);
+  return clamp(adjusted, 0.18, 1.2);
+}
+function ghostBaseSpeed(){
+  // Difficulty scales ghost speed 60..180
+  const d = clamp((settings.difficulty ?? 50), 0, 100);
+  return 60 + (d/100)*120;
+}
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)) }
+
+// Settings UI wiring
+const settingsBtn = document.getElementById('settingsBtn');
+const modal = document.getElementById('settingsModal');
+const speedInput = document.getElementById('playerSpeed');
+const speedVal = document.getElementById('playerSpeedVal');
+const diffInput = document.getElementById('difficulty');
+const diffVal = document.getElementById('difficultyVal');
+const saveBtn = document.getElementById('settingsSave');
+const cancelBtn = document.getElementById('settingsCancel');
+const resetBtn = document.getElementById('settingsReset');
+
+function openSettings(){
+  speedInput.value = settings.playerSpeed;
+  speedVal.textContent = settings.playerSpeed;
+  diffInput.value = settings.difficulty;
+  diffVal.textContent = settings.difficulty;
+  modal.classList.remove('hidden');
+}
+function closeSettings(){ modal.classList.add('hidden') }
+
+settingsBtn?.addEventListener('click', openSettings);
+cancelBtn?.addEventListener('click', closeSettings);
+modal?.addEventListener('click', (e)=>{ if(e.target === modal) closeSettings() });
+speedInput?.addEventListener('input', ()=>{ speedVal.textContent = speedInput.value });
+diffInput?.addEventListener('input', ()=>{ diffVal.textContent = diffInput.value });
+resetBtn?.addEventListener('click', ()=>{ settings = {...DEFAULT_SETTINGS}; saveSettings(settings); closeSettings() });
+saveBtn?.addEventListener('click', ()=>{
+  settings = {
+    playerSpeed: clamp(parseInt(speedInput.value||DEFAULT_SETTINGS.playerSpeed,10), 150, 600),
+    difficulty: clamp(parseInt(diffInput.value||DEFAULT_SETTINGS.difficulty,10), 0, 100),
+  };
+  saveSettings(settings);
+  closeSettings();
+});
